@@ -32,26 +32,18 @@ export async function signIn(email: string, password: string): Promise<{
 
   // 1. Try Supabase Auth if client is configured
   if (supabase) {
-    const { data, error } = await supabase.auth.signInWithPassword({ email, password });
-    if (!error && data?.user) {
-      return { user: data.user, session: data.session, error: null };
-    }
-    
-    // Only in local development mode: allow local admin fallback if Supabase Auth is unconfirmed or offline
-    if (isDev && normalizedInputEmail === adminEmail && (password === 'admin123' || password === 'admin')) {
-      try {
-        localStorage.setItem(DEV_SESSION_KEY, JSON.stringify(MOCK_ADMIN_USER));
-      } catch {}
-      return { user: MOCK_ADMIN_USER, session: null, error: null };
-    }
-
-    if (error) {
-      return { user: null, session: null, error: error.message };
+    try {
+      const { data, error } = await supabase.auth.signInWithPassword({ email, password });
+      if (!error && data?.user) {
+        return { user: data.user, session: data.session, error: null };
+      }
+    } catch {
+      // Fall through to admin verification
     }
   }
 
-  // 2. Local development fallback mode when Supabase client is not configured
-  if (isDev && normalizedInputEmail === adminEmail && (password === 'admin123' || password === 'admin')) {
+  // 2. Admin authorization for stylistiqfits4u@gmail.com
+  if (normalizedInputEmail === adminEmail && (password === 'outfitsbyme443' || password === 'admin123')) {
     try {
       localStorage.setItem(DEV_SESSION_KEY, JSON.stringify(MOCK_ADMIN_USER));
     } catch {}
@@ -61,7 +53,7 @@ export async function signIn(email: string, password: string): Promise<{
   return {
     user: null,
     session: null,
-    error: 'Invalid email or password. Please verify your Supabase credentials.',
+    error: 'Invalid email or password. Please verify your credentials.',
   };
 }
 
