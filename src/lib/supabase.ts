@@ -58,13 +58,26 @@ export function mapDatabaseProduct(row: Record<string, any>): Product {
   };
 }
 
+export function getLocalFallbackProducts(): Product[] {
+  try {
+    const saved = localStorage.getItem('stylistiq_admin_local_products');
+    if (saved) {
+      const parsed = JSON.parse(saved);
+      if (Array.isArray(parsed) && parsed.length > 0) {
+        return parsed;
+      }
+    }
+  } catch {}
+  return FALLBACK_PRODUCTS;
+}
+
 /**
  * Fetches all products from Supabase `products` table.
  * Automatically falls back to high-fidelity local products if database is empty or unconfigured.
  */
 export async function fetchProductsFromDatabase(): Promise<{ products: Product[]; fromDatabase: boolean; error?: string }> {
   if (!supabase || !isSupabaseConfigured) {
-    return { products: FALLBACK_PRODUCTS, fromDatabase: false };
+    return { products: getLocalFallbackProducts(), fromDatabase: false };
   }
 
   try {
@@ -75,7 +88,7 @@ export async function fetchProductsFromDatabase(): Promise<{ products: Product[]
 
     if (error) {
       console.warn('Supabase fetch products notice:', error.message);
-      return { products: FALLBACK_PRODUCTS, fromDatabase: false, error: error.message };
+      return { products: getLocalFallbackProducts(), fromDatabase: false, error: error.message };
     }
 
     if (data && data.length > 0) {
@@ -84,10 +97,10 @@ export async function fetchProductsFromDatabase(): Promise<{ products: Product[]
     }
 
     // Table exists but is empty
-    return { products: FALLBACK_PRODUCTS, fromDatabase: false, error: 'Database table "products" is empty' };
+    return { products: getLocalFallbackProducts(), fromDatabase: false, error: 'Database table "products" is empty' };
   } catch (err: any) {
     console.error('Failed to fetch from Supabase:', err);
-    return { products: FALLBACK_PRODUCTS, fromDatabase: false, error: err?.message || 'Network error' };
+    return { products: getLocalFallbackProducts(), fromDatabase: false, error: err?.message || 'Network error' };
   }
 }
 

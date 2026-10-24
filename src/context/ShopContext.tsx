@@ -146,6 +146,22 @@ export const ShopProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   useEffect(() => {
     loadProducts();
+
+    const handleStorage = (e: StorageEvent) => {
+      if (e.key === 'stylistiq_admin_local_products') {
+        loadProducts();
+      }
+    };
+    const handleFocus = () => {
+      loadProducts();
+    };
+
+    window.addEventListener('storage', handleStorage);
+    window.addEventListener('focus', handleFocus);
+    return () => {
+      window.removeEventListener('storage', handleStorage);
+      window.removeEventListener('focus', handleFocus);
+    };
   }, []);
 
   // Sync browser popstate (back/forward button)
