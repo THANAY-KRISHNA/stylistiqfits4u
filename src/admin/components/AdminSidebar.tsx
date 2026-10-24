@@ -3,6 +3,7 @@ import {
   LayoutDashboard,
   Package,
   ShoppingBag,
+  Sliders,
   ImageIcon,
   Settings,
   ChevronRight,
@@ -18,6 +19,7 @@ export type AdminSection =
   | 'dashboard'
   | 'products'
   | 'orders'
+  | 'banners'
   | 'media'
   | 'settings';
 
@@ -32,6 +34,7 @@ const NAV_ITEMS: Array<{ id: AdminSection; label: string; icon: React.FC<{ class
   { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard },
   { id: 'products', label: 'Products', icon: Package },
   { id: 'orders', label: 'Orders', icon: ShoppingBag },
+  { id: 'banners', label: 'Banners & Photos', icon: Sliders },
   { id: 'media', label: 'Media Library', icon: ImageIcon },
   { id: 'settings', label: 'Settings', icon: Settings },
 ];

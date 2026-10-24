@@ -76,13 +76,15 @@ export async function adminFetchAllProducts(): Promise<{
   }
 
   return {
-    products: (data ?? []).map((row) => ({
-      ...mapDatabaseProduct(row),
-      sku: row.sku ?? undefined,
-      status: (row.status ?? 'published') as AdminProduct['status'],
-      created_at: row.created_at,
-      updated_at: row.updated_at,
-    })),
+    products: (data ?? [])
+      .filter((row) => row.id !== 'site_config_homepage' && row.category !== 'System')
+      .map((row) => ({
+        ...mapDatabaseProduct(row),
+        sku: row.sku ?? undefined,
+        status: (row.status ?? 'published') as AdminProduct['status'],
+        created_at: row.created_at,
+        updated_at: row.updated_at,
+      })),
   };
 }
 

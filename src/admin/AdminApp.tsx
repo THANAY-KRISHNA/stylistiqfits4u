@@ -6,6 +6,7 @@ import { DashboardPage } from './pages/DashboardPage';
 import { ProductsPage } from './pages/ProductsPage';
 import { ProductEditPage } from './pages/ProductEditPage';
 import { OrdersPage } from './pages/OrdersPage';
+import { BannersPage } from './pages/BannersPage';
 import { MediaLibraryPage } from './pages/MediaLibraryPage';
 import { SettingsPage } from './pages/SettingsPage';
 import { type AdminProduct } from '../lib/adminData';
@@ -121,6 +122,8 @@ export const AdminApp: React.FC = () => {
           )}
 
           {currentSection === 'orders' && <OrdersPage />}
+
+          {currentSection === 'banners' && <BannersPage />}
 
           {currentSection === 'media' && <MediaLibraryPage />}
 

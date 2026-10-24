@@ -551,3 +551,27 @@ INSERT INTO public.products (
   'STYL-KRT-012'
 )
 ON CONFLICT (id) DO NOTHING;
+
+-- ==============================================================================
+-- 7. SITE SETTINGS TABLE (Homepage Banners, Circular Categories, Custom Photos)
+-- ==============================================================================
+CREATE TABLE IF NOT EXISTS public.site_settings (
+  key TEXT PRIMARY KEY,
+  value JSONB NOT NULL,
+  updated_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+ALTER TABLE public.site_settings ENABLE ROW LEVEL SECURITY;
+
+DROP POLICY IF EXISTS "Public can read site settings" ON public.site_settings;
+CREATE POLICY "Public can read site settings"
+  ON public.site_settings FOR SELECT
+  TO public
+  USING (true);
+
+DROP POLICY IF EXISTS "Admin manage site settings" ON public.site_settings;
+CREATE POLICY "Admin manage site settings"
+  ON public.site_settings FOR ALL
+  TO authenticated
+  USING (auth.jwt() ->> 'email' = 'stylistiqfits4u@gmail.com')
+  WITH CHECK (auth.jwt() ->> 'email' = 'stylistiqfits4u@gmail.com');

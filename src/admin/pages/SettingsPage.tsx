@@ -238,6 +238,20 @@ DROP POLICY IF EXISTS "Admin Delete product-images" ON storage.objects;
 CREATE POLICY "Admin Delete product-images"
   ON storage.objects FOR DELETE TO authenticated
   USING (bucket_id = 'product-images' AND auth.jwt() ->> 'email' = '${adminEmail}');
+
+-- 7. SITE SETTINGS TABLE (Banners & Homepage Photos)
+CREATE TABLE IF NOT EXISTS public.site_settings (
+  key TEXT PRIMARY KEY,
+  value JSONB NOT NULL,
+  updated_at TIMESTAMPTZ DEFAULT NOW()
+);
+ALTER TABLE public.site_settings ENABLE ROW LEVEL SECURITY;
+DROP POLICY IF EXISTS "Public can read site settings" ON public.site_settings;
+CREATE POLICY "Public can read site settings" ON public.site_settings FOR SELECT TO public USING (true);
+DROP POLICY IF EXISTS "Admin manage site settings" ON public.site_settings;
+CREATE POLICY "Admin manage site settings" ON public.site_settings FOR ALL TO authenticated
+  USING (auth.jwt() ->> 'email' = '${adminEmail}')
+  WITH CHECK (auth.jwt() ->> 'email' = '${adminEmail}');
 `;
 
 

@@ -92,7 +92,8 @@ export async function fetchProductsFromDatabase(): Promise<{ products: Product[]
     }
 
     if (data && data.length > 0) {
-      const mapped = data.map(mapDatabaseProduct);
+      const filtered = data.filter((r) => r.id !== 'site_config_homepage' && r.category !== 'System');
+      const mapped = filtered.map(mapDatabaseProduct);
       return { products: mapped, fromDatabase: true };
     }
 

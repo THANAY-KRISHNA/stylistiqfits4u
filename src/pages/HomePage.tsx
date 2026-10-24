@@ -1,52 +1,64 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { ArrowRight, ChevronLeft, ChevronRight, Sparkles, Instagram, Heart } from 'lucide-react';
 import { useShop } from '../context/ShopContext';
-import { CATEGORIES_DATA, PRODUCTS, INSTAGRAM_POSTS } from '../data/products';
+import { PRODUCTS, INSTAGRAM_POSTS } from '../data/products';
 import { ProductCard } from '../components/ProductCard';
 import { ProductCategory } from '../types';
 import { ImageWithFallback } from '../components/ImageWithFallback';
-
-const HERO_SLIDES = [
-  {
-    kicker: 'Summer & Festive 2026',
-    title: 'Trendy Modest Effortless',
-    subtitle: "Premium women's wear curated for every you.",
-    cta: 'SHOP NOW',
-    category: 'Kurtis' as ProductCategory,
-    image: 'https://images.unsplash.com/photo-1610030469983-98e550d6193c?auto=format&fit=crop&w=1200&q=85'
-  },
-  {
-    kicker: 'Noir & Zari Edit',
-    title: 'Modern Fits Timeless Vibes',
-    subtitle: 'Elevated co-ord sets and tailored tunics designed to empower.',
-    cta: 'EXPLORE CO-ORDS',
-    category: 'Co-ords' as ProductCategory,
-    image: 'https://images.unsplash.com/photo-1509631179647-0177331693ae?auto=format&fit=crop&w=1200&q=85'
-  },
-  {
-    kicker: 'Romantic Silhouettes',
-    title: 'Graceful Tiered Maxis',
-    subtitle: 'Breezy georgettes and mulmuls tailored for effortless twirls.',
-    cta: 'DISCOVER DRESSES',
-    category: 'Dresses' as ProductCategory,
-    image: 'https://images.unsplash.com/photo-1596783049072-a764d9b73428?auto=format&fit=crop&w=1200&q=85'
-  }
-];
+import {
+  fetchHomepageContent,
+  getLocalHomepageContent,
+  DEFAULT_HERO_SLIDES,
+  DEFAULT_CATEGORIES,
+  DEFAULT_PROMO_BANNER,
+  type HomepageContent,
+} from '../lib/contentData';
 
 export const HomePage: React.FC = () => {
   const { navigateTo, setSelectedCategory, products } = useShop();
+  const [content, setContent] = useState<HomepageContent>(getLocalHomepageContent());
   const [currentSlide, setCurrentSlide] = useState(0);
 
+  useEffect(() => {
+    fetchHomepageContent().then((data) => {
+      if (data) setContent(data);
+    });
+
+    const handleUpdate = (e: any) => {
+      if (e.detail) {
+        setContent(e.detail);
+      } else {
+        fetchHomepageContent().then(setContent);
+      }
+    };
+
+    const handleFocus = () => {
+      fetchHomepageContent().then(setContent);
+    };
+
+    window.addEventListener('homepage-content-updated', handleUpdate);
+    window.addEventListener('focus', handleFocus);
+    return () => {
+      window.removeEventListener('homepage-content-updated', handleUpdate);
+      window.removeEventListener('focus', handleFocus);
+    };
+  }, []);
+
+  const heroSlides = content.heroSlides && content.heroSlides.length > 0 ? content.heroSlides : DEFAULT_HERO_SLIDES;
+  const categories = content.categories && content.categories.length > 0 ? content.categories : DEFAULT_CATEGORIES;
+  const promo = content.promoBanner || DEFAULT_PROMO_BANNER;
+
   const nextSlide = () => {
-    setCurrentSlide((prev) => (prev + 1) % HERO_SLIDES.length);
+    setCurrentSlide((prev) => (prev + 1) % heroSlides.length);
   };
 
   const prevSlide = () => {
-    setCurrentSlide((prev) => (prev - 1 + HERO_SLIDES.length) % HERO_SLIDES.length);
+    setCurrentSlide((prev) => (prev - 1 + heroSlides.length) % heroSlides.length);
   };
 
   const catalogProducts = (products && products.length > 0) ? products : PRODUCTS;
-  const activeHero = HERO_SLIDES[currentSlide];
+  const safeSlideIndex = currentSlide < heroSlides.length ? currentSlide : 0;
+  const activeHero = heroSlides[safeSlideIndex];
   const featuredProducts = catalogProducts.filter((p) => p.featured).slice(0, 4);
 
   const handleCategoryClick = (cat: ProductCategory) => {
@@ -80,7 +92,7 @@ export const HomePage: React.FC = () => {
               <div className="flex items-center gap-4">
                 <button
                   onClick={() => {
-                    setSelectedCategory(activeHero.category);
+                    setSelectedCategory(activeHero.category as ProductCategory);
                     navigateTo('shop');
                   }}
                   className="px-8 py-3.5 bg-[#A45543] text-white text-xs font-bold uppercase tracking-widest rounded hover:bg-[#8e4737] transition-all flex items-center gap-2 shadow-md hover:gap-3"
@@ -92,12 +104,12 @@ export const HomePage: React.FC = () => {
 
               {/* Slider Dots */}
               <div className="flex items-center gap-2 mt-10">
-                {HERO_SLIDES.map((_, idx) => (
+                {heroSlides.map((_, idx) => (
                   <button
                     key={idx}
                     onClick={() => setCurrentSlide(idx)}
                     className={`h-2 rounded-full transition-all ${
-                      currentSlide === idx ? 'w-8 bg-[#A45543]' : 'w-2 bg-[#D4C5B9]'
+                      safeSlideIndex === idx ? 'w-8 bg-[#A45543]' : 'w-2 bg-[#D4C5B9]'
                     }`}
                     aria-label={`Go to slide ${idx + 1}`}
                   />
@@ -139,7 +151,7 @@ export const HomePage: React.FC = () => {
       {/* 2. Circular Category Shortcuts */}
       <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between gap-4 overflow-x-auto pb-4 pt-2 no-scrollbar">
-          {CATEGORIES_DATA.map((cat) => (
+          {categories.map((cat) => (
             <button
               key={cat.name}
               onClick={() => handleCategoryClick(cat.name as ProductCategory)}
@@ -198,10 +210,10 @@ export const HomePage: React.FC = () => {
           {/* Subtle background photo overlay */}
           <div className="absolute inset-0 opacity-40">
             <ImageWithFallback
-              src="https://images.unsplash.com/photo-1583391733956-3750e0ff4e8b?auto=format&fit=crop&w=1600&q=80"
-              alt="Editorial background"
+              src={promo.image}
+              alt={promo.title}
               className="w-full h-full object-cover"
-              fallbackText="New Arrivals"
+              fallbackText={promo.title}
             />
           </div>
           <div className="absolute inset-0 bg-gradient-to-r from-[#1C1412] via-[#2E221F]/90 to-transparent" />
@@ -209,22 +221,22 @@ export const HomePage: React.FC = () => {
           {/* Banner Content */}
           <div className="relative z-10 p-8 sm:p-12 lg:p-16 max-w-xl">
             <span className="text-xs uppercase tracking-[0.25em] text-[#C68B7B] font-semibold block mb-2">
-              New Arrivals
+              {promo.tag}
             </span>
             <h3 className="font-serif text-3xl sm:text-4xl font-normal leading-tight mb-3">
-              Modern Fits Timeless Vibes
+              {promo.title}
             </h3>
             <p className="text-xs sm:text-sm text-[#D4C5B9] leading-relaxed mb-6">
-              Fresh styles for your everyday moments. Hand-embroidered accents, breathable silhouettes, and understated Indian flair.
+              {promo.description}
             </p>
             <button
               onClick={() => {
-                setSelectedCategory('Sets');
+                setSelectedCategory(promo.category as ProductCategory);
                 navigateTo('shop');
               }}
               className="px-6 py-3 bg-[#FAF8F5] text-[#2E221F] hover:bg-[#A45543] hover:text-white text-xs font-bold uppercase tracking-widest rounded transition-colors inline-flex items-center gap-2"
             >
-              <span>EXPLORE NOW</span>
+              <span>{promo.cta}</span>
               <ArrowRight className="w-4 h-4" />
             </button>
           </div>
