@@ -6,7 +6,7 @@ import { ProductCard } from '../components/ProductCard';
 import { ProductCategory, Product } from '../types';
 
 export const ShopPage: React.FC = () => {
-  const { selectedCategory, setSelectedCategory, navigateTo } = useShop();
+  const { selectedCategory, setSelectedCategory, navigateTo, products } = useShop();
 
   // Filter States
   const [minPrice, setMinPrice] = useState(500);
@@ -20,6 +20,7 @@ export const ShopPage: React.FC = () => {
   const [isMobileFilterOpen, setIsMobileFilterOpen] = useState(false);
 
   const ITEMS_PER_PAGE = 9;
+  const catalogProducts = (products && products.length > 0) ? products : PRODUCTS;
 
   const ALL_SIZES = ['XS', 'S', 'M', 'L', 'XL', 'XXL'];
   const COLOR_OPTIONS = [
@@ -61,7 +62,7 @@ export const ShopPage: React.FC = () => {
 
   // Filter and Sort Logic
   const filteredProducts = useMemo(() => {
-    let result = [...PRODUCTS];
+    let result = [...catalogProducts];
 
     // Category
     if (selectedCategory !== 'All') {
@@ -146,7 +147,7 @@ export const ShopPage: React.FC = () => {
               className="accent-[#A45543]"
             />
             <span>All Styles</span>
-            <span className="text-[#7E726D] text-[11px] ml-auto">({PRODUCTS.length})</span>
+            <span className="text-[#7E726D] text-[11px] ml-auto">({catalogProducts.length})</span>
           </label>
           {CATEGORIES_DATA.map((cat) => (
             <label key={cat.name} className="flex items-center gap-2 cursor-pointer hover:text-[#A45543]">
@@ -162,7 +163,7 @@ export const ShopPage: React.FC = () => {
               />
               <span>{cat.name}</span>
               <span className="text-[#7E726D] text-[11px] ml-auto">
-                ({PRODUCTS.filter((p) => p.category === cat.name).length})
+                ({catalogProducts.filter((p) => p.category === cat.name).length})
               </span>
             </label>
           ))}
@@ -260,7 +261,7 @@ export const ShopPage: React.FC = () => {
             }}
             className="rounded accent-[#A45543]"
           />
-          <span>In Stock Only ({PRODUCTS.filter((p) => p.inStock).length})</span>
+          <span>In Stock Only ({catalogProducts.filter((p) => p.inStock).length})</span>
         </label>
       </div>
 

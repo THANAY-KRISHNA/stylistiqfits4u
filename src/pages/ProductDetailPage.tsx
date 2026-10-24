@@ -29,10 +29,12 @@ export const ProductDetailPage: React.FC = () => {
     toggleWishlist,
     setIsSizeGuideOpen,
     navigateTo,
-    showToast
+    showToast,
+    products
   } = useShop();
 
-  const product = selectedProduct || PRODUCTS[0];
+  const catalogProducts = (products && products.length > 0) ? products : PRODUCTS;
+  const product = selectedProduct || catalogProducts[0];
 
   const [selectedImageIndex, setSelectedImageIndex] = useState(0);
   const [selectedSize, setSelectedSize] = useState(product.sizes[0] || 'M');
@@ -83,7 +85,7 @@ export const ProductDetailPage: React.FC = () => {
     setNewReviewComment('');
   };
 
-  const relatedProducts = PRODUCTS.filter(
+  const relatedProducts = catalogProducts.filter(
     (p) => p.id !== product.id && (p.category === product.category || p.featured)
   ).slice(0, 4);
 

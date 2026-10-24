@@ -1,4 +1,5 @@
 import React from 'react';
+import { BrowserRouter, Routes, Route } from 'react-router-dom';
 import { ShopProvider, useShop } from './context/ShopContext';
 import { Header } from './components/Header';
 import { Footer } from './components/Footer';
@@ -15,7 +16,11 @@ import { WishlistDrawer } from './components/WishlistDrawer';
 import { QuickViewModal } from './components/QuickViewModal';
 import { SizeGuideModal } from './components/SizeGuideModal';
 import { SearchModal } from './components/SearchModal';
-import { Sparkles, CheckCircle2 } from 'lucide-react';
+import { Sparkles, CheckCircle2, Loader2 } from 'lucide-react';
+
+const AdminApp = React.lazy(() =>
+  import('./admin/AdminApp').then((m) => ({ default: m.AdminApp }))
+);
 
 const MainAppContent: React.FC = () => {
   const { activePage, toast } = useShop();
@@ -75,8 +80,32 @@ const MainAppContent: React.FC = () => {
 
 export default function App() {
   return (
-    <ShopProvider>
-      <MainAppContent />
-    </ShopProvider>
+    <BrowserRouter>
+      <Routes>
+        <Route
+          path="/admin/*"
+          element={
+            <React.Suspense
+              fallback={
+                <div className="min-h-screen bg-[#1C1412] flex flex-col items-center justify-center text-[#FAF8F5]">
+                  <Loader2 className="w-8 h-8 animate-spin text-[#A45543] mb-3" />
+                  <p className="text-xs text-[#7E726D]">Loading Admin Portal…</p>
+                </div>
+              }
+            >
+              <AdminApp />
+            </React.Suspense>
+          }
+        />
+        <Route
+          path="/*"
+          element={
+            <ShopProvider>
+              <MainAppContent />
+            </ShopProvider>
+          }
+        />
+      </Routes>
+    </BrowserRouter>
   );
 }

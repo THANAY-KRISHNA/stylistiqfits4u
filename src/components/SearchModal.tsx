@@ -6,13 +6,15 @@ import { formatINR } from '../utils/cartRules';
 import { ImageWithFallback } from './ImageWithFallback';
 
 export const SearchModal: React.FC = () => {
-  const { isSearchOpen, setIsSearchOpen, navigateTo } = useShop();
+  const { isSearchOpen, setIsSearchOpen, navigateTo, products } = useShop();
   const [searchTerm, setSearchTerm] = useState('');
+
+  const catalogProducts = (products && products.length > 0) ? products : PRODUCTS;
 
   const searchResults = useMemo(() => {
     if (!searchTerm.trim()) return [];
     const term = searchTerm.toLowerCase().trim();
-    return PRODUCTS.filter(
+    return catalogProducts.filter(
       (p) =>
         p.name.toLowerCase().includes(term) ||
         p.category.toLowerCase().includes(term) ||
@@ -20,7 +22,7 @@ export const SearchModal: React.FC = () => {
         p.fabric.toLowerCase().includes(term) ||
         p.colors.some((c) => c.name.toLowerCase().includes(term))
     );
-  }, [searchTerm]);
+  }, [searchTerm, catalogProducts]);
 
   if (!isSearchOpen) return null;
 

@@ -135,6 +135,12 @@ export const Footer: React.FC = () => {
               <li>
                 <span className="text-[#9E9088]">Boutique FAQ</span>
               </li>
+              <li>
+                <a href="/admin" className="hover:text-[#C68B7B] transition-colors text-[11px] text-[#7E726D] inline-flex items-center gap-1">
+                  <span>Admin Portal</span>
+                  <span>→</span>
+                </a>
+              </li>
             </ul>
           </div>
 

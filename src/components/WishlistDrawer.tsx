@@ -12,12 +12,14 @@ export const WishlistDrawer: React.FC = () => {
     wishlist,
     toggleWishlist,
     addToCart,
-    navigateTo
+    navigateTo,
+    products
   } = useShop();
 
   if (!isWishlistOpen) return null;
 
-  const wishlistedProducts = PRODUCTS.filter((p) => wishlist.includes(p.id));
+  const catalogProducts = (products && products.length > 0) ? products : PRODUCTS;
+  const wishlistedProducts = catalogProducts.filter((p) => wishlist.includes(p.id));
 
   return (
     <div className="fixed inset-0 z-50 overflow-hidden" role="dialog" aria-modal="true">

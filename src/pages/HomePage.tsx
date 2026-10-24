@@ -34,7 +34,7 @@ const HERO_SLIDES = [
 ];
 
 export const HomePage: React.FC = () => {
-  const { navigateTo, setSelectedCategory } = useShop();
+  const { navigateTo, setSelectedCategory, products } = useShop();
   const [currentSlide, setCurrentSlide] = useState(0);
 
   const nextSlide = () => {
@@ -45,8 +45,9 @@ export const HomePage: React.FC = () => {
     setCurrentSlide((prev) => (prev - 1 + HERO_SLIDES.length) % HERO_SLIDES.length);
   };
 
+  const catalogProducts = (products && products.length > 0) ? products : PRODUCTS;
   const activeHero = HERO_SLIDES[currentSlide];
-  const featuredProducts = PRODUCTS.filter((p) => p.featured).slice(0, 4);
+  const featuredProducts = catalogProducts.filter((p) => p.featured).slice(0, 4);
 
   const handleCategoryClick = (cat: ProductCategory) => {
     setSelectedCategory(cat);

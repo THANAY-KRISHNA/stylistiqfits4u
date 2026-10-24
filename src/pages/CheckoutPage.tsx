@@ -20,6 +20,7 @@ import {
 } from '../utils/cartRules';
 import { CustomerAddress, PaymentMethod, OrderDetails } from '../types';
 import { ImageWithFallback } from '../components/ImageWithFallback';
+import { recordOrderToDatabase } from '../lib/supabase';
 
 const INDIAN_STATES = [
   'Andhra Pradesh', 'Assam', 'Bihar', 'Chandigarh', 'Delhi', 'Goa', 'Gujarat',
@@ -108,33 +109,42 @@ export const CheckoutPage: React.FC = () => {
 
     setIsSubmitting(true);
 
-    // Simulate order placement
-    setTimeout(() => {
-      const orderId = generateOrderId();
-      const newOrder: OrderDetails = {
-        orderId,
-        date: new Date().toLocaleDateString('en-IN', {
-          day: 'numeric',
-          month: 'short',
-          year: 'numeric'
-        }),
-        items: [...cart],
-        subtotal: totals.subtotal,
-        discount: totals.discount,
-        couponCode: appliedCoupon || undefined,
-        shipping: totals.shipping + expressSurcharge,
-        total: finalTotal,
-        address: { ...formData },
-        paymentMethod,
-        paymentStatus: paymentMethod === 'cod' ? 'Pending' : 'Paid',
-        deliveryEstimate: shippingSpeed === 'express' ? '2-3 Business Days' : '4-5 Business Days'
-      };
+    const orderId = generateOrderId();
+    const newOrder: OrderDetails = {
+      orderId,
+      date: new Date().toLocaleDateString('en-IN', {
+        day: 'numeric',
+        month: 'short',
+        year: 'numeric'
+      }),
+      items: [...cart],
+      subtotal: totals.subtotal,
+      discount: totals.discount,
+      couponCode: appliedCoupon || undefined,
+      shipping: totals.shipping + expressSurcharge,
+      total: finalTotal,
+      address: { ...formData },
+      paymentMethod,
+      paymentStatus: paymentMethod === 'cod' ? 'Pending' : 'Paid',
+      deliveryEstimate: shippingSpeed === 'express' ? '2-3 Business Days' : '4-5 Business Days'
+    };
 
-      setLastOrder(newOrder);
-      clearCart();
-      setIsSubmitting(false);
-      navigateTo('order-confirmation');
-    }, 800);
+    // Asynchronously record order to Supabase
+    recordOrderToDatabase(newOrder)
+      .then((res) => {
+        if (!res.success && res.error) {
+          console.warn('Supabase order record note:', res.error);
+        }
+      })
+      .catch((err) => {
+        console.warn('Supabase order record error:', err);
+      })
+      .finally(() => {
+        setLastOrder(newOrder);
+        clearCart();
+        setIsSubmitting(false);
+        navigateTo('order-confirmation');
+      });
   };
 
   return (
