@@ -3,8 +3,8 @@ import { Product, CartItem, OrderDetails } from '../types';
 import { PRODUCTS as FALLBACK_PRODUCTS } from '../data/products';
 
 const env = typeof import.meta !== 'undefined' && import.meta?.env ? import.meta.env : (typeof process !== 'undefined' ? process.env : {}) as any;
-const supabaseUrl = env?.VITE_SUPABASE_URL;
-const supabaseAnonKey = env?.VITE_SUPABASE_ANON_KEY || '';
+const supabaseUrl = env?.VITE_SUPABASE_URL || 'https://lmgrhnwksuztcsmwkoqo.supabase.co';
+const supabaseAnonKey = env?.VITE_SUPABASE_ANON_KEY || 'sb_publishable_lTlA5gd1JbFl-lLxEo8Z3A_PQo08bnB';
 
 export const isSupabaseConfigured = Boolean(
   supabaseUrl && 
