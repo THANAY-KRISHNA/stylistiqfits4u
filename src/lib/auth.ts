@@ -35,15 +35,19 @@ export async function signIn(email: string, password: string): Promise<{
     try {
       const { data, error } = await supabase.auth.signInWithPassword({ email, password });
       if (!error && data?.user) {
+        try { localStorage.removeItem(DEV_SESSION_KEY); } catch {}
         return { user: data.user, session: data.session, error: null };
       }
-    } catch {
-      // Fall through to admin verification
+      if (error) {
+        return { user: null, session: null, error: error.message };
+      }
+    } catch (err: any) {
+      return { user: null, session: null, error: err?.message || 'Authentication failed' };
     }
   }
 
-  // 2. Admin authorization for stylistiqfits4u@gmail.com
-  if (normalizedInputEmail === adminEmail && (password === 'outfitsbyme443' || password === 'admin123')) {
+  // 2. Dev fallback only when Supabase is unconfigured
+  if (!supabase && normalizedInputEmail === adminEmail && (password === 'outfitsbyme443' || password === 'admin123')) {
     try {
       localStorage.setItem(DEV_SESSION_KEY, JSON.stringify(MOCK_ADMIN_USER));
     } catch {}
@@ -81,8 +85,10 @@ export async function getCurrentUser(): Promise<User | null> {
     try {
       const { data } = await supabase.auth.getUser();
       if (data?.user) return data.user;
+      try { localStorage.removeItem(DEV_SESSION_KEY); } catch {}
+      return null;
     } catch {
-      // ignore
+      return null;
     }
   }
 

@@ -51,7 +51,7 @@ export const DEFAULT_HERO_SLIDES: HeroSlide[] = [
     subtitle: 'Elevated co-ord sets and tailored tunics designed to empower.',
     cta: 'EXPLORE CO-ORDS',
     category: 'Co-ords',
-    image: 'https://images.unsplash.com/photo-1509631179647-0177331693ae?auto=format&fit=crop&w=1200&q=85',
+    image: 'https://images.unsplash.com/photo-1583391733956-3750e0ff4e8b?auto=format&fit=crop&w=1200&q=85',
   },
   {
     id: 'slide-3',
@@ -154,6 +154,9 @@ export async function saveHomepageContent(
 
   // 2. Persist to Supabase
   if (supabase && isSupabaseConfigured) {
+    let cloudSaved = false;
+    let lastError: string | undefined = undefined;
+
     try {
       // Try site_settings first
       const { error: siteErr } = await supabase.from('site_settings').upsert({
@@ -161,9 +164,14 @@ export async function saveHomepageContent(
         value: content,
         updated_at: new Date().toISOString(),
       });
+      if (!siteErr) {
+        cloudSaved = true;
+      }
+    } catch {}
 
-      // Always also save to products table for bulletproof cloud sync across all clients
-      await supabase.from('products').upsert({
+    try {
+      // Also save to products table
+      const { error: prodErr } = await supabase.from('products').upsert({
         id: 'site_config_homepage',
         name: 'Site Configuration - Homepage',
         category: 'System',
@@ -172,8 +180,20 @@ export async function saveHomepageContent(
         description: JSON.stringify(content),
         updated_at: new Date().toISOString(),
       });
+
+      if (!prodErr) {
+        cloudSaved = true;
+      } else {
+        lastError = prodErr.message;
+        console.warn('products table cloud save warning:', prodErr.message);
+      }
     } catch (e: any) {
+      lastError = e?.message;
       console.warn('Supabase cloud content sync notice:', e?.message);
+    }
+
+    if (!cloudSaved && lastError) {
+      return { success: false, error: lastError };
     }
   }
 
