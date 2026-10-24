@@ -1,0 +1,6 @@
+{
+  "name": "STYL IS TIQ - Wear Your Story",
+  "description": "Premium Indian women's fashion boutique featuring handcrafted kurtis, co-ord sets, dresses, tops, bottoms, and accessories.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
