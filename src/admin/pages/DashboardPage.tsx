@@ -10,7 +10,9 @@ import {
   Clock,
   BarChart3,
   HardDrive,
+  Database,
 } from 'lucide-react';
+import { adminFetchAllProducts, adminFetchOrders } from '../../lib/adminData';
 import { supabase, isSupabaseConfigured } from '../../lib/supabase';
 
 interface Stats {
@@ -36,34 +38,41 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({ onNavigate }) => {
   const [stats, setStats] = useState<Stats | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [dbPending, setDbPending] = useState(false);
 
   const fetchStats = async () => {
-    if (!supabase || !isSupabaseConfigured) {
-      setError('Supabase not configured. Add your VITE_SUPABASE_ANON_KEY to .env to see live data.');
-      setLoading(false);
-      return;
-    }
-
     setLoading(true);
     setError(null);
+    setDbPending(false);
 
     try {
-      const [productsRes, ordersRes, recentOrdersRes] = await Promise.all([
-        supabase.from('products').select('status', { count: 'exact' }),
-        supabase.from('orders').select('status', { count: 'exact' }),
-        supabase.from('orders').select('order_id, customer_name, total, status, created_at').order('created_at', { ascending: false }).limit(5),
-      ]);
+      // 1. Fetch real products
+      const { products } = await adminFetchAllProducts();
+      
+      // 2. Fetch real orders (clean, zero mock data)
+      const { orders } = await adminFetchOrders();
 
-      const products = productsRes.data ?? [];
-      const orders = ordersRes.data ?? [];
+      // Check if remote table products exists
+      if (supabase) {
+        const { error: testErr } = await supabase.from('products').select('id').limit(1);
+        if (testErr && testErr.code === 'PGRST205') {
+          setDbPending(true);
+        }
+      }
 
       setStats({
-        totalProducts: productsRes.count ?? products.length,
-        publishedProducts: products.filter((p: any) => !p.status || p.status === 'published').length,
-        draftProducts: products.filter((p: any) => p.status === 'draft').length,
-        totalOrders: ordersRes.count ?? orders.length,
-        pendingOrders: orders.filter((o: any) => !o.status || o.status === 'pending').length,
-        recentOrders: recentOrdersRes.data ?? [],
+        totalProducts: products.length,
+        publishedProducts: products.filter((p) => !p.status || p.status === 'published').length,
+        draftProducts: products.filter((p) => p.status === 'draft').length,
+        totalOrders: orders.length,
+        pendingOrders: orders.filter((o) => !o.status || o.status === 'pending').length,
+        recentOrders: orders.slice(0, 5).map((o) => ({
+          order_id: o.order_id,
+          customer_name: o.customer_name,
+          total: o.total,
+          status: o.status,
+          created_at: o.created_at,
+        })),
       });
     } catch (e: any) {
       setError(e?.message || 'Failed to load dashboard data');
@@ -123,12 +132,35 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({ onNavigate }) => {
         </button>
       </div>
 
-      {/* Error / no-connection state */}
-      {error && (
+      {/* Database Pending Setup Banner */}
+      {dbPending && (
+        <div className="bg-[#2E221F] border border-[#A45543]/60 rounded-2xl p-5 mb-6 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 shadow-xl">
+          <div className="flex items-start gap-3">
+            <div className="w-10 h-10 rounded-xl bg-[#A45543]/20 flex items-center justify-center text-[#C68B7B] shrink-0 mt-0.5 sm:mt-0">
+              <Database className="w-5 h-5" />
+            </div>
+            <div>
+              <div className="text-sm font-semibold text-[#FAF8F5]">Supabase Cloud Database Setup Pending</div>
+              <div className="text-xs text-[#D4C5B9] mt-0.5">
+                Your database tables (products, orders, storage bucket) need to be created in Supabase. Run the SQL script in your Supabase SQL Editor.
+              </div>
+            </div>
+          </div>
+          <button
+            onClick={() => onNavigate('settings')}
+            className="px-4 py-2 bg-[#A45543] hover:bg-[#8B4232] text-white text-xs font-medium rounded-xl transition-colors whitespace-nowrap"
+          >
+            Copy SQL Script →
+          </button>
+        </div>
+      )}
+
+      {/* Generic Error state */}
+      {error && !dbPending && (
         <div className="bg-amber-900/20 border border-amber-700/40 rounded-xl px-5 py-4 mb-6 flex items-start gap-3">
           <AlertCircle className="w-4 h-4 text-amber-400 mt-0.5 shrink-0" />
           <div>
-            <div className="text-amber-300 text-sm font-medium">Database not connected</div>
+            <div className="text-amber-300 text-sm font-medium">Notice</div>
             <div className="text-amber-400/70 text-xs mt-0.5">{error}</div>
           </div>
         </div>

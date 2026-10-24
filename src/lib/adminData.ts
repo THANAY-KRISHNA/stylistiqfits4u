@@ -23,7 +23,7 @@ function getLocalProducts(): AdminProduct[] {
   const initial = PRODUCTS.map((p, idx) => ({
     ...p,
     sku: `STYL-${p.category.toUpperCase().slice(0, 3)}-${String(idx + 1).padStart(3, '0')}`,
-    status: (idx % 5 === 4 ? 'draft' : 'published') as AdminProduct['status'],
+    status: 'published' as AdminProduct['status'],
     created_at: new Date(Date.now() - idx * 86400000).toISOString(),
   }));
   try {
@@ -303,86 +303,15 @@ export interface AdminOrder {
 function getLocalOrders(): AdminOrder[] {
   try {
     const saved = localStorage.getItem(LOCAL_ORDERS_KEY);
-    if (saved) return JSON.parse(saved);
+    if (saved) {
+      const orders = JSON.parse(saved);
+      // Clean out any old mock data from previous sessions
+      if (Array.isArray(orders)) {
+        return orders.filter((o: any) => o.id !== 'ord-1' && o.id !== 'ord-2' && o.id !== 'ord-3' && o.id !== 'ord-4');
+      }
+    }
   } catch {}
-  const initial: AdminOrder[] = [
-    {
-      id: 'ord-1',
-      order_id: 'STY-2026-8910',
-      created_at: new Date(Date.now() - 3600000).toISOString(),
-      date: '25 Oct 2026',
-      customer_name: 'Ananya Sharma',
-      customer_email: 'ananya.sharma@gmail.com',
-      customer_phone: '+91 98765 43210',
-      shipping_address: {
-        fullName: 'Ananya Sharma',
-        email: 'ananya.sharma@gmail.com',
-        phone: '+91 98765 43210',
-        streetAddress: 'Flat 402, Lotus Apartments, Indiranagar',
-        city: 'Bengaluru',
-        state: 'Karnataka',
-        pinCode: '560038',
-      },
-      subtotal: 2598,
-      discount: 260,
-      shipping: 0,
-      total: 2338,
-      payment_method: 'upi',
-      payment_status: 'Paid',
-      delivery_estimate: '2-4 business days',
-      status: 'processing',
-      items: [
-        {
-          name: 'Floral Kurti Set',
-          price: 1299,
-          quantity: 2,
-          color: 'Lavender',
-          size: 'M',
-          image: 'https://images.unsplash.com/photo-1610030469983-98e550d6193c?auto=format&fit=crop&w=600&q=80',
-        },
-      ],
-    },
-    {
-      id: 'ord-2',
-      order_id: 'STY-2026-8909',
-      created_at: new Date(Date.now() - 86400000).toISOString(),
-      date: '24 Oct 2026',
-      customer_name: 'Pooja Verma',
-      customer_email: 'pooja.verma@outlook.com',
-      customer_phone: '+91 91234 56789',
-      shipping_address: {
-        fullName: 'Pooja Verma',
-        email: 'pooja.verma@outlook.com',
-        phone: '+91 91234 56789',
-        streetAddress: 'House 12, Sector 15',
-        city: 'Gurugram',
-        state: 'Haryana',
-        pinCode: '122001',
-      },
-      subtotal: 1899,
-      discount: 0,
-      shipping: 0,
-      total: 1899,
-      payment_method: 'cod',
-      payment_status: 'Pending',
-      delivery_estimate: '3-5 business days',
-      status: 'pending',
-      items: [
-        {
-          name: 'Embroidered Co-ord Set',
-          price: 1899,
-          quantity: 1,
-          color: 'Rust Orange',
-          size: 'L',
-          image: 'https://images.unsplash.com/photo-1515886657613-9f3515b0c78f?auto=format&fit=crop&w=600&q=80',
-        },
-      ],
-    },
-  ];
-  try {
-    localStorage.setItem(LOCAL_ORDERS_KEY, JSON.stringify(initial));
-  } catch {}
-  return initial;
+  return [];
 }
 
 export async function adminFetchOrders(
